@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    DatabaseReference myRef;
+   public static DatabaseReference myRef;
     Button addBtn,updateBtn,uploadImage;
     TextView textView;
     EditText editText;
@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-         private void writeNewUser(String userId, String username, String title,String body) {
-            Post user = new Post(userId,username, title,body);
+         private void writeNewUser(String userId, String username, String title,String body,String imageUrl) {
+            Post user = new Post(userId,username, title,body,imageUrl);
 
             myRef.child("posts").setValue(user);
 
@@ -67,20 +67,20 @@ public class MainActivity extends AppCompatActivity {
              };
              myRef.addValueEventListener(postListener);
         }
-    private void UpdateUser(String userId, String username, String title,String body) {
-        // Create new post at /user-posts/$userid/$postid and at
-        // /posts/$postid simultaneously
-        String key = myRef.child("posts").push().getKey();
-        Post post = new Post(userId, username, title, body);
-        Map<String, Object> postValues = post.toMap();
-
-        Map<String, Object> childUpdates = new HashMap<>();
-        childUpdates.put("/posts/" + key, postValues);
-        childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
-
-        myRef.updateChildren(childUpdates);
-
-    }
+//    private void UpdateUser(String userId, String username, String title,String body) {
+//        // Create new post at /user-posts/$userid/$postid and at
+//        // /posts/$postid simultaneously
+//        String key = myRef.child("posts").push().getKey();
+//        Post post = new Post(userId, username, title, body);
+//        Map<String, Object> postValues = post.toMap();
+//
+//        Map<String, Object> childUpdates = new HashMap<>();
+//        childUpdates.put("/posts/" + key, postValues);
+//        childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
+//
+//        myRef.updateChildren(childUpdates);
+//
+//    }
 
 
 
@@ -92,18 +92,18 @@ public class MainActivity extends AppCompatActivity {
 //
 //                readFromDatabase();
 
-                writeNewUser("2","abc","xyz","jhgfdjh");
+                writeNewUser("2","abc","xyz","jhgfdjh","");
                 Toast.makeText(MainActivity.this,"Added.",Toast.LENGTH_SHORT).show();
 
             }
         });
-        updateBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UpdateUser("3","ewr","rtt","vbbb");
-                Toast.makeText(MainActivity.this,"updated.",Toast.LENGTH_SHORT).show();
-            }
-        });
+//        updateBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                UpdateUser("3","ewr","rtt","vbbb");
+//                Toast.makeText(MainActivity.this,"updated.",Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
         uploadImage.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -34,8 +34,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.example.firebase.MainActivity.myRef;
+
 public class Upload_RetriveImage_Activity extends AppCompatActivity {
-    DatabaseReference myRef;
+
     Button addImage,updloadImage;
    ImageView imageView;
     Bitmap bitmap;
@@ -96,6 +98,22 @@ public class Upload_RetriveImage_Activity extends AppCompatActivity {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                             progressDialog.dismiss();
+
+                            // Hiding the progressDialog after done uploading.
+                            progressDialog.dismiss();
+
+                            // Showing toast message after done uploading.
+                            Toast.makeText(getApplicationContext(), "Image Uploaded Successfully ", Toast.LENGTH_LONG).show();
+
+                            @SuppressWarnings("VisibleForTests")
+                            ImageUploadInfo imageUploadInfo = new ImageUploadInfo("imageName", taskSnapshot.getDownloadUrl().toString());
+
+                            // Getting image upload ID.
+//                            String ImageUploadId = myRef.push().getKey();
+
+                            // Adding image upload id s child element into databaseReference.
+                            myRef.child("posts").child("imageUrl").setValue(imageUploadInfo);
+
                             Toast.makeText(Upload_RetriveImage_Activity.this, "Uploaded", Toast.LENGTH_SHORT).show();
                         }
                     })
