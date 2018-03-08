@@ -1,5 +1,6 @@
 package com.example.firebase;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     DatabaseReference myRef;
-    Button addBtn,updateBtn;
+    Button addBtn,updateBtn,uploadImage;
     TextView textView;
     EditText editText;
     @Override
@@ -103,6 +104,14 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this,"updated.",Toast.LENGTH_SHORT).show();
             }
         });
+
+        uploadImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this,Upload_RetriveImage_Activity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void intViews() {
@@ -110,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         updateBtn = findViewById(R.id.updateBtn);
         textView = findViewById(R.id.label);
         editText = findViewById(R.id.edit);
+        uploadImage = findViewById(R.id.updloadImage);
     }
 
     private void readFromDatabase() {
