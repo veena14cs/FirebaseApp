@@ -89,7 +89,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (markerPoints.size() ==2) {
                 markerPoints.clear();
-                //mMap.clear();
+                mMap.clear();
+                onMapReady(mMap);
             }
 
             // Adding new item to the ArrayList
