@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -71,7 +72,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Adding new item to the ArrayList
 
 
-        if (location != null || !location.equals("")) {
+        if (location != null && !location.equals("")) {
 
             Geocoder geocoder = new Geocoder(this);
             try {
@@ -86,9 +87,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions().position(latLng).title("" + location)).showInfoWindow();
             mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 
-            if (markerPoints.size() > 1) {
+            if (markerPoints.size() ==2) {
                 markerPoints.clear();
-                mMap.clear();
+                //mMap.clear();
             }
 
             // Adding new item to the ArrayList
@@ -100,16 +101,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // Setting the position of the marker
             options.position(latLng);
 
-            if (markerPoints.size() == 1) {
-                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-            } else if (markerPoints.size() == 2) {
+//            if (markerPoints.size() == 1) {
+//                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+//            }
+//            else if (markerPoints.size() == 2) {
                 options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-            }
+          //  }
             mMap.addMarker(options);
 
-            if (markerPoints.size() >= 2) {
-                LatLng origin = (LatLng) markerPoints.get(0);
-                LatLng dest = (LatLng) markerPoints.get(1);
+            if (markerPoints.size() == 2) {
+                LatLng origin = locateCurrentPosition() ;//(LatLng) markerPoints.get(0);
+                LatLng dest = latLng;
 
                 // Getting URL to the Google Directions API
                 String url = getDirectionsUrl(origin, dest);
@@ -119,6 +121,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Start downloading json data from Google Directions API
                 downloadTask.execute(url);
             }
+        }else {
+            Toast.makeText(getApplicationContext(),"Enter location",Toast.LENGTH_LONG).show();
         }
     }
 
@@ -134,26 +138,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private void locateCurrentPosition() {
+    private LatLng locateCurrentPosition() {
 
         int status = getPackageManager().checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION,
                 getPackageName());
 
         if (status == PackageManager.PERMISSION_GRANTED) {
-            Location location = mLocationManager.getLastKnownLocation(provider);
-            updateWithNewLocation(location);
+            Location currentLocation = mLocationManager.getLastKnownLocation(provider);
+
+            updateWithNewLocation(currentLocation);
             //  mLocationManager.addGpsStatusListener(this);
             long minTime = 5000;// ms
             float minDist = 5.0f;// meter
-            mLocationManager.requestLocationUpdates(provider, minTime, minDist,
-                    this);
+            mLocationManager.requestLocationUpdates(provider, minTime, minDist, this);
+
+            List<Address> addressList = null;
+
+            // Adding new item to the ArrayList
+
+
+            if (currentLocation != null && !currentLocation.equals("")) {
+
+                Geocoder geocoder = new Geocoder(this);
+                try {
+                    addressList = geocoder.getFromLocation(currentLocation.getLatitude(), currentLocation.getLongitude(),1);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                Address address = addressList.get(0);
+                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                mMap.addMarker(new MarkerOptions().position(latLng));//.title("" + currentLocation)).showInfoWindow();
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                markerPoints.add(latLng);
+                return new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+            }
+
         }
+        return null;
     }
 
 
     private boolean isProviderAvailable() {
-        mLocationManager = (LocationManager) getSystemService(
-                Context.LOCATION_SERVICE);
+        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_COARSE);
         criteria.setAltitudeRequired(false);
@@ -162,8 +190,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         criteria.setPowerRequirement(Criteria.POWER_LOW);
 
         provider = mLocationManager.getBestProvider(criteria, true);
-        if (mLocationManager
-                .isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        if (mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             provider = LocationManager.NETWORK_PROVIDER;
 
             return true;
@@ -213,7 +240,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addCircle(mOptions);
         if (mCurrentPosition != null)
             mCurrentPosition.remove();
-        mCurrentPosition = mMap.addMarker(mMarkerOptions);
+       // mCurrentPosition = mMap.addMarker(mMarkerOptions);
     }
 
 
@@ -269,8 +296,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             super.onPostExecute(result);
 
             ParserTask parserTask = new ParserTask();
-
-
             parserTask.execute(result);
 
         }
@@ -306,31 +331,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             PolylineOptions lineOptions = null;
             MarkerOptions markerOptions = new MarkerOptions();
 
-            for (int i = 0; i < result.size(); i++) {
-                points = new ArrayList();
-                lineOptions = new PolylineOptions();
+            Log.e("RESULT :",""+result);
+            if (result != null && result.size() != 0) {
+                for (int i = 0; i < result.size(); i++) {
+                    points = new ArrayList();
+                    lineOptions = new PolylineOptions();
 
-                List<HashMap<String, String>> path = result.get(i);
+                    List<HashMap<String, String>> path = result.get(i);
 
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String, String> point = path.get(j);
+                    for (int j = 0; j < path.size(); j++) {
+                        HashMap<String, String> point = path.get(j);
 
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
+                        double lat = Double.parseDouble(point.get("lat"));
+                        Log.e("LAT",""+lat);
+                        double lng = Double.parseDouble(point.get("lng"));
+                        LatLng position = new LatLng(lat, lng);
 
-                    points.add(position);
+                        points.add(position);
+                   }
+
+                    lineOptions.addAll(points);
+                    lineOptions.width(4);
+                    lineOptions.color(Color.RED);
+                    lineOptions.geodesic(true);
+
                 }
 
-                lineOptions.addAll(points);
-                lineOptions.width(4);
-                lineOptions.color(Color.RED);
-                lineOptions.geodesic(true);
-
-            }
-
 // Drawing polyline in the Google Map for the i-th route
-            mMap.addPolyline(lineOptions);
+                mMap.addPolyline(lineOptions);
+            }else {
+                Toast.makeText(getApplicationContext(),"No route found !",Toast.LENGTH_LONG).show();
+            }
         }
     }
 
